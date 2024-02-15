@@ -1,0 +1,42 @@
+server:
+  port: 8080
+spring:
+  # Eureka 서버에 아래 application.name으로 서비스명을 등록
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: item-service
+          # /item-service로 시작하는 url 요청이 들어올 경우  (첫번째로 실행)
+          predicates:
+            - Path=/item-service/**
+          # 첫번째 접두어(item-service) 제거 (두번째로 실행)
+          filters:
+            - StripPrefix=1
+          # lb://[Eureka에 등록된 서비스명] (로드밸런싱 / 세번째로 실행)
+          # uri: http:localhost:8081로 선언하면, 로드밸런싱이 아니라 8081로 직접 연결
+          uri: lb://item-service
+        - id: member-service
+          predicates:
+            - Path=/member-service/**
+          filters:
+            - StripPrefix=1
+          uri: lb://member-service
+        - id: order-service
+          predicates:
+            - Path=/order-service/**
+          filters:
+            - StripPrefix=1
+          uri: lb://order-service
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+    hostname: localhost
+jwt:
+  expiration: 30 # 30분
+  secretKey: mySecret
+
